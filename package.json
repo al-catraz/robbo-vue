@@ -1,0 +1,31 @@
+{
+  "name": "robbo-vue",
+  "version": "2.0.0",
+  "scripts": {
+    "serve": "vue-cli-service serve --port 8000",
+    "build": "vue-cli-service build",
+    "start": "npm run serve"
+  },
+  "dependencies": {
+    "@vue/cli-plugin-babel": "^4.5.7",
+    "@vue/cli-service": "^4.5.7",
+    "@vue/compiler-sfc": "^3.0.0-alpha.8",
+    "lodash": "^4.17.21",
+    "node-sass": "^4.14.1",
+    "sass-loader": "^10.0.3",
+    "vue": "^2.6.12",
+    "vue-template-compiler": "^2.6.12",
+    "vuex": "^3.5.1"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-eslint": "^4.5.7",
+    "@vue/eslint-config-airbnb": "^5.0.2",
+    "babel-eslint": "^11.0.0-beta.2",
+    "eslint": "^7.11.0",
+    "eslint-plugin-vue": "^7.0.1",
+    "stylelint": "^13.7.2",
+    "stylelint-order": "^4.1.0",
+    "stylelint-scss": "^3.18.0",
+    "stylelint-webpack-plugin": "^2.1.0"
+  }
+}
