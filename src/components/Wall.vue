@@ -1,7 +1,8 @@
 <template>
   <div
-    class="component wall"
-    :style="position"
+    class="wall"
+    :class="componentClass"
+    :style="componentPosition"
   />
 </template>
 
@@ -15,6 +16,6 @@ export default {
 
 <style lang="scss" scoped>
   .wall {
-    background: red;
+    background-position: 0 32px;
   }
 </style>

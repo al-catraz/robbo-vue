@@ -1,6 +1,6 @@
 <template>
   <div
-    class="key"
+    class="life"
     :class="componentClass"
     :style="componentPosition"
   />
@@ -22,7 +22,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-  .key {
-    background-position: -192px 32px;
+  .life {
+    background-position: -288px 32px;
   }
 </style>

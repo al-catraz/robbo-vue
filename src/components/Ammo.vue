@@ -1,6 +1,6 @@
 <template>
   <div
-    class="key"
+    class="ammo"
     :class="componentClass"
     :style="componentPosition"
   />
@@ -22,7 +22,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-  .key {
-    background-position: -192px 32px;
+  .ammo {
+    background-position: -96px 32px;
   }
 </style>

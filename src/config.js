@@ -3,6 +3,8 @@ export default class Config {
 
   constructor() {
     this.config = {
+      moveThrottle: 100,
+      shootThrottle: 600,
       unit: 32,
     };
 

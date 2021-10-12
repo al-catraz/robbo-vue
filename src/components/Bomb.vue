@@ -1,6 +1,6 @@
 <template>
   <div
-    class="component crate"
+    class="component bomb"
     :class="componentClass"
     :style="componentPosition"
   />
@@ -14,6 +14,11 @@ export default {
   mixins: [component],
 
   props: {
+    explodable: {
+      type: Boolean,
+      default: true,
+    },
+
     movable: {
       type: Boolean,
       default: true,
@@ -32,7 +37,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-  .crate {
-    background-position: -32px 32px;
+  .bomb {
+    background-position: -128px 32px;
   }
 </style>

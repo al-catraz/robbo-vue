@@ -1,6 +1,6 @@
 <template>
   <div
-    class="key"
+    class="door"
     :class="componentClass"
     :style="componentPosition"
   />
@@ -13,7 +13,7 @@ export default {
   mixins: [component],
 
   props: {
-    collectable: {
+    openable: {
       type: Boolean,
       default: true,
     },
@@ -22,7 +22,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-  .key {
-    background-position: -192px 32px;
+  .door {
+    background-position: -224px 32px;
   }
 </style>

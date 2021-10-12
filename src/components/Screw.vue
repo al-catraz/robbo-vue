@@ -1,6 +1,6 @@
 <template>
   <div
-    class="key"
+    class="screw"
     :class="componentClass"
     :style="componentPosition"
   />
@@ -22,7 +22,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-  .key {
-    background-position: -192px 32px;
+  .screw {
+    background-position: -64px 32px;
   }
 </style>
