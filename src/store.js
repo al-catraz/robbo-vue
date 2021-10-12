@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
-import EventBus from './utils/EventBus';
+import EventBus from './utils/eventBus';
 
 Vue.use(Vuex);
 

@@ -1,6 +1,6 @@
 // @flow
 import Vue from 'vue';
 
-const EventBus = new Vue();
+const eventBus = new Vue();
 
-export default EventBus;
+export default eventBus;

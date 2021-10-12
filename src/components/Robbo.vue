@@ -11,7 +11,7 @@
 
 <script>
 import component from '../mixins/component';
-import EventBus from '../utils/EventBus';
+import EventBus from '../utils/eventBus';
 
 export default {
   mixins: [component],

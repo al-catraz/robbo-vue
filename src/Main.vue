@@ -45,11 +45,10 @@
 </template>
 
 <script>
-// wyniesc animacje strzalu do mixinu
 // wyniesc sprawdzanie kolizji
 // zmiana kierunku robbo przy strzale w inna strone
 // gruz
-// usuwanie gruzu
+// usuwanie gruzu razem z animacja (store:147)
 // niespodzianka
 // wybuch bomby
 // ------
@@ -61,7 +60,6 @@ import {
   mapGetters,
   mapActions,
 } from 'vuex';
-import { difference } from 'lodash';
 import Ammo from './components/Ammo.vue';
 import Bomb from './components/Bomb.vue';
 import Crate from './components/Crate.vue';
@@ -73,7 +71,8 @@ import Screw from './components/Screw.vue';
 import Shot from './components/Shot.vue';
 import Wall from './components/Wall.vue';
 import keyboard from './mixins/keyboard';
-import EventBus from './utils/EventBus';
+import shotAnimation from './mixins/shotAnimation';
+import EventBus from './utils/eventBus';
 
 export default {
   components: {
@@ -89,7 +88,10 @@ export default {
     Wall,
   },
 
-  mixins: [keyboard],
+  mixins: [
+    keyboard,
+    shotAnimation,
+  ],
 
   data() {
     return {
@@ -125,30 +127,6 @@ export default {
       if (newShotComponents.length !== oldShotComponents.length) {
         this.shotComponents = newShotComponents;
       }
-    },
-
-    shotComponents(newShotComponents, oldShotComponents) {
-      const shotComponent = difference(newShotComponents, oldShotComponents)[0];
-
-      let intervalHandler = null;
-
-      function animateShot() {
-        const isShotComponentExisting = this.componentGetter(shotComponent.id);
-
-        if (isShotComponentExisting) {
-          this.moveComponent({
-            id: shotComponent.id,
-            axis: shotComponent.axis,
-            direction: shotComponent.direction,
-          });
-
-          return;
-        }
-
-        clearInterval(intervalHandler);
-      }
-
-      intervalHandler = setInterval(animateShot.bind(this), this.$config.moveThrottle);
     },
   },
 
