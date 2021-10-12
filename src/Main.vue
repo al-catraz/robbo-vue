@@ -72,7 +72,7 @@ import Shot from './components/Shot.vue';
 import Wall from './components/Wall.vue';
 import keyboard from './mixins/keyboard';
 import shotAnimation from './mixins/shotAnimation';
-import EventBus from './utils/eventBus';
+import eventBus from './utils/eventBus';
 
 export default {
   components: {
@@ -135,11 +135,11 @@ export default {
     this.setLifesAction(8);
     this.setLevelAction(1);
 
-    EventBus.$on('component-collected', this.componentCollected);
-    EventBus.$on('component-opened', this.componentOpened);
-    EventBus.$on('move-camera', this.moveCamera);
-    EventBus.$on('move-component', this.moveComponent);
-    EventBus.$on('play-sound', this.playSound);
+    eventBus.$on('component-collected', this.componentCollected);
+    eventBus.$on('component-opened', this.componentOpened);
+    eventBus.$on('move-camera', this.moveCamera);
+    eventBus.$on('move-component', this.moveComponent);
+    eventBus.$on('play-sound', this.playSound);
   },
 
   methods: {

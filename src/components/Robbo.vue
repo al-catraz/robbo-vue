@@ -11,7 +11,7 @@
 
 <script>
 import component from '../mixins/component';
-import EventBus from '../utils/eventBus';
+import eventBus from '../utils/eventBus';
 
 export default {
   mixins: [component],
@@ -38,7 +38,7 @@ export default {
         this.skinStep = newX % 2 === 0 ? 1 : 2;
       }, this.animationTime);
 
-      EventBus.$emit('play-sound', 'robbo');
+      eventBus.$emit('play-sound', 'robbo');
     },
     y(newY, oldY) {
       this.skinDirection = newY > oldY ? 'down' : 'up';
@@ -47,8 +47,8 @@ export default {
         this.skinStep = newY % 2 === 0 ? 1 : 2;
       }, this.animationTime);
 
-      EventBus.$emit('play-sound', 'robbo');
-      EventBus.$emit('move-camera', this.skinDirection);
+      eventBus.$emit('play-sound', 'robbo');
+      eventBus.$emit('move-camera', this.skinDirection);
     },
   },
 };

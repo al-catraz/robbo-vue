@@ -8,7 +8,7 @@
 
 <script>
 import component from '../mixins/component';
-import EventBus from '../utils/eventBus';
+import eventBus from '../utils/eventBus';
 
 export default {
   mixins: [component],
@@ -27,10 +27,10 @@ export default {
 
   watch: {
     x() {
-      EventBus.$emit('play-sound', 'move');
+      eventBus.$emit('play-sound', 'move');
     },
     y() {
-      EventBus.$emit('play-sound', 'move');
+      eventBus.$emit('play-sound', 'move');
     },
   },
 };

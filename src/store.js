@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
-import EventBus from './utils/eventBus';
+import eventBus from './utils/eventBus';
 
 Vue.use(Vuex);
 
@@ -119,14 +119,14 @@ export default function (/* config, storage */) {
             if (movingComponent.name === 'Robbo') {
               if (componentType.collectable) {
                 state.map.splice(collidingComponentIndex, 1);
-                EventBus.$emit('play-sound', componentName);
-                EventBus.$emit('component-collected', componentName);
+                eventBus.$emit('play-sound', componentName);
+                eventBus.$emit('component-collected', componentName);
               } else if (componentType.openable && keys) {
                 state.map.splice(collidingComponentIndex, 1);
-                EventBus.$emit('play-sound', componentName);
-                EventBus.$emit('component-opened', componentName);
+                eventBus.$emit('play-sound', componentName);
+                eventBus.$emit('component-opened', componentName);
               } else if (componentType.movable) {
-                EventBus.$emit('move-component', {
+                eventBus.$emit('move-component', {
                   id: collision.component.id,
                   axis,
                   direction,
@@ -136,7 +136,7 @@ export default function (/* config, storage */) {
               const robboCollisionAfterMoving = isCollisionDetected(state.map, id, nextPosition);
 
               if (!robboCollisionAfterMoving && !componentType.openable) {
-                EventBus.$emit('move-component', {
+                eventBus.$emit('move-component', {
                   id,
                   axis,
                   direction,
