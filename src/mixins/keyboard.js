@@ -1,5 +1,8 @@
+import {
+  mapGetters,
+  mapActions,
+} from 'vuex';
 import { throttle } from 'lodash';
-import { mapActions } from 'vuex';
 
 export default {
   data() {
@@ -7,6 +10,21 @@ export default {
       isShiftActive: false,
       robboId: null,
     };
+  },
+
+  computed: {
+    ...mapGetters([
+      'componentPropsGetter',
+      'nextPositionGetter',
+    ]),
+  },
+
+  watch: {
+    mapGetter(newMap, oldMap) {
+      if (!oldMap.length) {
+        this.robboId = this.mapGetter.find((component) => component.name === 'Robbo').id;
+      }
+    },
   },
 
   created() {
@@ -21,7 +39,8 @@ export default {
       };
 
       if (this.isShiftActive) {
-        this.shootWithComponent(params);
+        this.setComponentSideAction(params);
+        this.shoot(params);
 
         return;
       }
@@ -37,7 +56,8 @@ export default {
       };
 
       if (this.isShiftActive) {
-        this.shootWithComponent(params);
+        this.setComponentSideAction(params);
+        this.shoot(params);
 
         return;
       }
@@ -53,7 +73,8 @@ export default {
       };
 
       if (this.isShiftActive) {
-        this.shootWithComponent(params);
+        this.setComponentSideAction(params);
+        this.shoot(params);
 
         return;
       }
@@ -69,7 +90,8 @@ export default {
       };
 
       if (this.isShiftActive) {
-        this.shootWithComponent(params);
+        this.setComponentSideAction(params);
+        this.shoot(params);
 
         return;
       }
@@ -77,38 +99,17 @@ export default {
       this.moveComponent(params);
     }, this.$config.moveThrottle);
 
-    this.shootWithComponent = throttle(function ({ id, axis, direction }) {
-      const shootingComponent = this.componentGetter(id);
-      const shotComponent = this.getNextPosition(id, axis, direction);
-
-      if (shootingComponent.name === 'Robbo') {
-        if (this.ammoGetter) {
-          this.deleteAmmoAction();
-        } else {
-          return;
-        }
-      }
-
-      shotComponent.axis = axis;
-      shotComponent.direction = direction;
-      shotComponent.name = 'Shot';
-
-      this.addComponentAction(shotComponent);
-      this.playSound('shot');
+    this.shoot = throttle(function ({ id, axis, direction }) {
+      this.shootWithComponentAction({ id, axis, direction });
     }, this.$config.shootThrottle);
-  },
-
-  watch: {
-    mapGetter(newMap, oldMap) {
-      if (!oldMap.length) {
-        this.robboId = this.mapGetter.find((component) => component.name === 'Robbo').id;
-      }
-    },
   },
 
   methods: {
     ...mapActions([
       'addComponentAction',
+      'removeComponentAction',
+      'setComponentSideAction',
+      'shootWithComponentAction',
     ]),
 
     keydownHandler(event) {

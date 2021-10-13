@@ -9,6 +9,7 @@
           :is="component.name"
           :key="`${component.name}-${index}`"
           :axis="component.axis"
+          :direction="component.direction"
           :x="component.x"
           :y="component.y"
         />
@@ -45,17 +46,16 @@
 </template>
 
 <script>
-// wyniesc sprawdzanie kolizji
-// zmiana kierunku robbo przy strzale w inna strone
-// gruz
 // usuwanie gruzu razem z animacja (store:147)
 // niespodzianka
+// dzialko
+// teleportacja
 // wybuch bomby
+// po zniszczeniu robbo wylaczyc klawiature az do odrodzenia
 // ------
 // animacja wgrania mapy i urodzin robbo
 // reset mapy esc
 // wykrycie inspectora i blokada
-// lepszy dzwiek chodzenia robota
 import {
   mapGetters,
   mapActions,
@@ -67,6 +67,7 @@ import Door from './components/Door.vue';
 import Key from './components/Key.vue';
 import Life from './components/Life.vue';
 import Robbo from './components/Robbo.vue';
+import Rubble from './components/Rubble.vue';
 import Screw from './components/Screw.vue';
 import Shot from './components/Shot.vue';
 import Wall from './components/Wall.vue';
@@ -83,6 +84,7 @@ export default {
     Key,
     Life,
     Robbo,
+    Rubble,
     Screw,
     Shot,
     Wall,
@@ -155,7 +157,7 @@ export default {
       'setLevelAction',
       'setMapAction',
       'setLifesAction',
-      'setPositionAction',
+      'setComponentPositionAction',
     ]),
 
     componentCollected(name) {
@@ -194,36 +196,22 @@ export default {
       return props;
     },
 
-    getNextPosition(id, axis, direction) {
-      const component = this.componentGetter(id);
-
-      let {
-        x,
-        y,
-      } = component;
-
-      if (axis === 'x') {
-        if (direction === 'positive') {
-          x += 1;
-        } else {
-          x -= 1;
-        }
-      } else if (axis === 'y') {
-        if (direction === 'positive') {
-          y += 1;
-        } else {
-          y -= 1;
-        }
-      }
-
-      return {
-        x,
-        y,
-      };
-    },
-
     async loadMap() {
-      this.setMapAction(await (await fetch(`maps/${this.levelGetter}.json`)).json());
+      let map = await (await fetch(`maps/${this.levelGetter}.json`)).json();
+
+      map = map.map((component) => {
+        if (this.$config.movableComponents.includes(component.name)) {
+          return {
+            ...component,
+            axis: 'x',
+            direction: 'positive',
+          };
+        }
+
+        return component;
+      });
+
+      this.setMapAction(map);
     },
 
     moveCamera(direction) {
@@ -239,18 +227,19 @@ export default {
     },
 
     moveComponent({ id, axis, direction }) {
-      const nextPosition = this.getNextPosition(id, axis, direction);
-
-      this.setPositionAction({
+      this.setComponentPositionAction({
         id,
-        nextPosition,
+        axis,
+        direction,
       });
     },
 
     playSound(name) {
       const sound = new Audio(`./audio/${name}.mp3`);
 
-      sound.play();
+      if (this.$config.isSoundEnabled) {
+        sound.play();
+      }
     },
   },
 };

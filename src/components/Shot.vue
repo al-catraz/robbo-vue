@@ -20,6 +20,7 @@ export default {
       default: 'x',
       type: String,
     },
+
     damaging: {
       type: Boolean,
       default: true,

@@ -17,6 +17,11 @@ export default {
       type: Boolean,
       default: true,
     },
+
+    shootable: {
+      type: Boolean,
+      default: true,
+    },
   },
 };
 </script>

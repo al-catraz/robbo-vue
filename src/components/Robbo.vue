@@ -19,36 +19,56 @@ export default {
   data() {
     return {
       animationTime: 180,
-      skinDirection: 'down',
+      skinSide: 'down',
       skinStep: 1,
     };
   },
 
   computed: {
     skinClass() {
-      return `robbo-${this.skinDirection}-${this.skinStep}`;
+      return `robbo-${this.skinSide}-${this.skinStep}`;
     },
   },
 
   watch: {
+    axis() {
+      this.setSide();
+    },
+    direction() {
+      this.setSide();
+    },
     x(newX, oldX) {
-      this.skinDirection = newX < oldX ? 'left' : 'right';
+      this.skinSide = newX < oldX ? 'left' : 'right';
 
       setTimeout(() => {
-        this.skinStep = newX % 2 === 0 ? 1 : 2;
+        this.skinStep = this.skinStep === 2 ? 1 : 2;
       }, this.animationTime);
 
       eventBus.$emit('play-sound', 'robbo');
     },
     y(newY, oldY) {
-      this.skinDirection = newY > oldY ? 'down' : 'up';
+      this.skinSide = newY > oldY ? 'down' : 'up';
 
       setTimeout(() => {
-        this.skinStep = newY % 2 === 0 ? 1 : 2;
+        this.skinStep = this.skinStep === 2 ? 1 : 2;
       }, this.animationTime);
 
       eventBus.$emit('play-sound', 'robbo');
-      eventBus.$emit('move-camera', this.skinDirection);
+      eventBus.$emit('move-camera', this.skinSide);
+    },
+  },
+
+  methods: {
+    setSide() {
+      if (this.axis === 'x') {
+        this.skinSide = this.direction === 'negative' ? 'left' : 'right';
+      } else {
+        this.skinSide = this.direction === 'negative' ? 'up' : 'down';
+      }
+
+      setTimeout(() => {
+        this.skinStep = this.skinStep === 2 ? 1 : 2;
+      }, this.animationTime);
     },
   },
 };

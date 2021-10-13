@@ -1,33 +1,11 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import eventBus from './utils/eventBus';
+import isCollisionDetected from './utils/collisionDetector';
 
 Vue.use(Vuex);
 
-function isCollisionDetected(map, id, nextPosition) {
-  let collision = null;
-
-  if (
-    (nextPosition.x < 0 || nextPosition.x > 15)
-    || (nextPosition.y < 0 || nextPosition.y > 30)
-  ) {
-    collision = { component: null };
-  }
-
-  map.forEach((component) => {
-    if (
-      !collision
-      && component.id !== id
-      && (component.x === nextPosition.x && component.y === nextPosition.y)
-    ) {
-      collision = { component };
-    }
-  });
-
-  return collision;
-}
-
-export default function (/* config, storage */) {
+export default function (/* todo remove config, storage */) {
   return new Vuex.Store({
     state: {
       ammo: 0,
@@ -44,6 +22,8 @@ export default function (/* config, storage */) {
 
       componentGetter: (state, getters) => (id) => getters.mapGetter.find((component) => component.id === id),
 
+      componentPropsGetter: (state) => state.componentProps,
+
       keysGetter: (state) => state.keys,
 
       levelGetter: (state) => state.level,
@@ -52,12 +32,117 @@ export default function (/* config, storage */) {
 
       mapGetter: (state) => state.map,
 
+      nextPositionGetter: (state, getters) => (id, axis, direction) => {
+        const component = getters.componentGetter(id);
+
+        let {
+          x,
+          y,
+        } = component;
+
+        if (axis === 'x') {
+          if (direction === 'positive') {
+            x += 1;
+          } else {
+            x -= 1;
+          }
+        } else if (axis === 'y') {
+          if (direction === 'positive') {
+            y += 1;
+          } else {
+            y -= 1;
+          }
+        }
+
+        return {
+          x,
+          y,
+        };
+      },
+
       screwsGetter: (state) => state.screws,
     },
 
     mutations: {
       ammoMutation(state, ammo) {
         state.ammo = ammo;
+      },
+
+      componentPositionMutation(state, { id, keys, nextPosition }) {
+        const {
+          x,
+          y,
+        } = nextPosition;
+        const collision = isCollisionDetected(state.map, id, nextPosition);
+        const movingComponent = state.map.find((component) => component.id === id);
+        const movingComponentIndex = state.map.findIndex((component) => component.id === movingComponent.id);
+
+        let axis = null;
+        let direction = null;
+
+        if (nextPosition.x !== movingComponent.x) {
+          axis = 'x';
+          direction = (nextPosition.x - movingComponent.x) > 0 ? 'positive' : 'negative';
+        } else {
+          axis = 'y';
+          direction = (nextPosition.y - movingComponent.y) > 0 ? 'positive' : 'negative';
+        }
+
+        movingComponent.axis = axis;
+        movingComponent.direction = direction;
+
+        if (collision) {
+          const collidingComponent = collision.component;
+
+          if (collidingComponent) {
+            const collidingComponentName = collidingComponent.name;
+            const collidingComponentType = state.componentProps[collidingComponentName];
+            const collidingComponentIndex = state.map.findIndex((component) => component.id === collidingComponent.id);
+
+            if (movingComponent.name === 'Robbo') {
+              if (collidingComponentType.collectable) {
+                state.map.splice(collidingComponentIndex, 1);
+                eventBus.$emit('play-sound', collidingComponentName);
+                eventBus.$emit('component-collected', collidingComponentName);
+              } else if (collidingComponentType.openable && keys) {
+                state.map.splice(collidingComponentIndex, 1);
+                eventBus.$emit('play-sound', collidingComponentName);
+                eventBus.$emit('component-opened', collidingComponentName);
+              } else if (collidingComponentType.movable) {
+                eventBus.$emit('move-component', {
+                  id: collidingComponent.id,
+                  axis,
+                  direction,
+                });
+              }
+
+              const robboCollisionAfterMoving = isCollisionDetected(state.map, id, nextPosition);
+
+              if (!robboCollisionAfterMoving && !collidingComponentType.openable) {
+                eventBus.$emit('move-component', { id, axis, direction });
+              }
+            } else if (movingComponent.name === 'Shot') {
+              state.map.splice(movingComponentIndex, 1);
+
+              if (collidingComponentType.shootable) {
+                state.map.splice(collidingComponentIndex, 1);
+                // todo w jego miejsce wstawic animowana chmure
+              }
+            }
+          } else if (movingComponent.name === 'Shot') {
+            state.map.splice(movingComponentIndex, 1);
+          }
+        } else {
+          movingComponent.x = x;
+          movingComponent.y = y;
+        }
+      },
+
+      componentSideMutation(state, { id, axis, direction }) {
+        const component = state.map.find((component) => component.id === id);
+
+        component.axis = axis;
+        component.direction = direction;
       },
 
       componentPropsMutation(state, componentProps) {
@@ -90,70 +175,10 @@ export default function (/* config, storage */) {
         state.map = newMap;
       },
 
-      positionMutation(state, { id, keys, nextPosition }) {
-        const {
-          x,
-          y,
-        } = nextPosition;
-        const collision = isCollisionDetected(state.map, id, nextPosition);
-        const movingComponent = state.map.find((component) => component.id === id);
-        const movingComponentIndex = state.map.findIndex((component) => component.id === movingComponent.id);
+      removeComponentMutation(state, id) {
+        const componentIndex = state.map.findIndex((component) => component.id === id);
 
-        let axis = null;
-        let direction = null;
-
-        if (nextPosition.x !== movingComponent.x) {
-          axis = 'x';
-          direction = (nextPosition.x - movingComponent.x) > 0 ? 'positive' : 'negative';
-        } else {
-          axis = 'y';
-          direction = (nextPosition.y - movingComponent.y) > 0 ? 'positive' : 'negative';
-        }
-
-        if (collision) {
-          if (collision.component) {
-            const componentName = collision.component.name;
-            const componentType = state.componentProps[componentName];
-            const collidingComponentIndex = state.map.findIndex((component) => component.id === collision.component.id);
-
-            if (movingComponent.name === 'Robbo') {
-              if (componentType.collectable) {
-                state.map.splice(collidingComponentIndex, 1);
-                eventBus.$emit('play-sound', componentName);
-                eventBus.$emit('component-collected', componentName);
-              } else if (componentType.openable && keys) {
-                state.map.splice(collidingComponentIndex, 1);
-                eventBus.$emit('play-sound', componentName);
-                eventBus.$emit('component-opened', componentName);
-              } else if (componentType.movable) {
-                eventBus.$emit('move-component', {
-                  id: collision.component.id,
-                  axis,
-                  direction,
-                });
-              }
-
-              const robboCollisionAfterMoving = isCollisionDetected(state.map, id, nextPosition);
-
-              if (!robboCollisionAfterMoving && !componentType.openable) {
-                eventBus.$emit('move-component', {
-                  id,
-                  axis,
-                  direction,
-                });
-              }
-            } else if (movingComponent.name === 'Shot') {
-              state.map.splice(movingComponentIndex, 1);
-              // todo tutaj usunac obiekt state.map.splice(collidingComponentIndex, 1);
-              // i w jego miejsce wstawic animowana chmure
-            }
-          } else if (movingComponent.name === 'Shot') {
-            state.map.splice(movingComponentIndex, 1);
-          }
-        } else {
-          movingComponent.x = x;
-          movingComponent.y = y;
-        }
+        state.map.splice(componentIndex, 1);
       },
 
       screwsMutation(state, screws) {
@@ -196,8 +221,26 @@ export default function (/* config, storage */) {
         commit('lifesMutation', getters.lifesGetter - 1);
       },
 
+      removeComponentAction({ commit }, id) {
+        commit('removeComponentMutation', id);
+      },
+
+      setComponentPositionAction({ getters, commit }, { id, axis, direction }) {
+        const nextPosition = getters.nextPositionGetter(id, axis, direction);
+
+        commit('componentPositionMutation', {
+          id,
+          keys: getters.keysGetter,
+          nextPosition,
+        });
+      },
+
       setComponentPropsAction({ commit }, componentProps) {
         commit('componentPropsMutation', componentProps);
+      },
+
+      setComponentSideAction({ commit }, { id, axis, direction }) {
+        commit('componentSideMutation', { id, axis, direction });
       },
 
       setLevelAction({ commit }, level) {
@@ -218,12 +261,34 @@ export default function (/* config, storage */) {
         commit('mapMutation', map);
       },
 
-      setPositionAction({ getters, commit }, { id, nextPosition }) {
-        commit('positionMutation', {
-          id,
-          keys: getters.keysGetter,
-          nextPosition,
-        });
+      shootWithComponentAction({ getters, dispatch }, { id, axis, direction }) {
+        const shootingComponent = getters.componentGetter(id);
+        const shotComponent = getters.nextPositionGetter(id, axis, direction);
+
+        if (shootingComponent.name === 'Robbo') {
+          if (getters.ammoGetter) {
+            dispatch('deleteAmmoAction');
+          } else {
+            return;
+          }
+        }
+
+        shotComponent.axis = axis;
+        shotComponent.direction = direction;
+        shotComponent.name = 'Shot';
+
+        eventBus.$emit('play-sound', 'shot');
+
+        if (!isCollisionDetected(getters.mapGetter, id, shotComponent)) {
+          dispatch('addComponentAction', shotComponent);
+        } else {
+          const shootedComponent = getters.mapGetter.find((component) => component.x === shotComponent.x && component.y === shotComponent.y);
+          const shootedComponentType = getters.componentPropsGetter[shootedComponent.name];
+
+          if (shootedComponentType.shootable) {
+            dispatch('removeComponentAction', shootedComponent.id);
+          }
+        }
       },
     },
   });

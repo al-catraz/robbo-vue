@@ -1,6 +1,6 @@
 <template>
   <div
-    class="ammo"
+    class="rubble"
     :class="componentClass"
     :style="componentPosition"
   />
@@ -13,11 +13,6 @@ export default {
   mixins: [component],
 
   props: {
-    collectable: {
-      type: Boolean,
-      default: true,
-    },
-
     shootable: {
       type: Boolean,
       default: true,
@@ -27,7 +22,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-  .ammo {
-    background-position: -96px 32px;
+  .rubble {
+    background-position: -160px 32px;
   }
 </style>
