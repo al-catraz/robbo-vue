@@ -7,6 +7,7 @@
       <template v-for="(component, index) in mapGetter">
         <component
           :is="component.name"
+          :id="component.id"
           :key="`${component.name}-${index}`"
           :axis="component.axis"
           :direction="component.direction"
@@ -46,12 +47,13 @@
 </template>
 
 <script>
-// usuwanie gruzu razem z animacja (store:147)
-// niespodzianka
 // dzialko
+// kapsuła
 // teleportacja
-// wybuch bomby
-// po zniszczeniu robbo wylaczyc klawiature az do odrodzenia
+// niespodzianka
+// wybuch ze juz zebrano srubki i dzwiek
+// wybuch bomby i wybuchanie innych bomb dookola w lancuchu
+// po zniszczeniu robbo wylaczyc klawiature, przewinac obraz do gory az do odrodzenia
 // ------
 // animacja wgrania mapy i urodzin robbo
 // reset mapy esc
@@ -64,6 +66,7 @@ import Ammo from './components/Ammo.vue';
 import Bomb from './components/Bomb.vue';
 import Crate from './components/Crate.vue';
 import Door from './components/Door.vue';
+import Fog from './components/Fog.vue';
 import Key from './components/Key.vue';
 import Life from './components/Life.vue';
 import Robbo from './components/Robbo.vue';
@@ -71,8 +74,8 @@ import Rubble from './components/Rubble.vue';
 import Screw from './components/Screw.vue';
 import Shot from './components/Shot.vue';
 import Wall from './components/Wall.vue';
+import animation from './mixins/animation';
 import keyboard from './mixins/keyboard';
-import shotAnimation from './mixins/shotAnimation';
 import eventBus from './utils/eventBus';
 
 export default {
@@ -81,6 +84,7 @@ export default {
     Bomb,
     Crate,
     Door,
+    Fog,
     Key,
     Life,
     Robbo,
@@ -91,15 +95,9 @@ export default {
   },
 
   mixins: [
+    animation,
     keyboard,
-    shotAnimation,
   ],
-
-  data() {
-    return {
-      shotComponents: [],
-    };
-  },
 
   computed: {
     ...mapGetters([
@@ -121,15 +119,6 @@ export default {
     levelGetter() {
       this.loadMap();
     },
-
-    mapGetter(newMap, oldMap) {
-      const newShotComponents = newMap.filter((component) => component.name === 'Shot');
-      const oldShotComponents = oldMap.filter((component) => component.name === 'Shot');
-
-      if (newShotComponents.length !== oldShotComponents.length) {
-        this.shotComponents = newShotComponents;
-      }
-    },
   },
 
   created() {
@@ -142,6 +131,7 @@ export default {
     eventBus.$on('move-camera', this.moveCamera);
     eventBus.$on('move-component', this.moveComponent);
     eventBus.$on('play-sound', this.playSound);
+    eventBus.$on('replace-component', this.replaceComponent);
   },
 
   methods: {
@@ -149,10 +139,11 @@ export default {
       'addAmmoAction',
       'addKeyAction',
       'addLifeAction',
-      'addScrewAction',
       'deleteAmmoAction',
       'deleteKeyAction',
+      'deleteScrewAction',
       'deleteLifeAction',
+      'replaceComponentAction',
       'setComponentPropsAction',
       'setLevelAction',
       'setMapAction',
@@ -161,7 +152,7 @@ export default {
     ]),
 
     componentCollected(name) {
-      const componentCollectedAction = this[`add${name}Action`];
+      const componentCollectedAction = this[`${name === 'Screw' ? 'delete' : 'add'}${name}Action`];
 
       if (typeof componentCollectedAction === 'function') {
         componentCollectedAction();
@@ -240,6 +231,10 @@ export default {
       if (this.$config.isSoundEnabled) {
         sound.play();
       }
+    },
+
+    replaceComponent({ id, name }) {
+      this.replaceComponentAction({ id, name });
     },
   },
 };

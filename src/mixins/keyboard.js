@@ -100,7 +100,9 @@ export default {
     }, this.$config.moveThrottle);
 
     this.shoot = throttle(function ({ id, axis, direction }) {
-      this.shootWithComponentAction({ id, axis, direction });
+      if (this.isShiftActive) {
+        this.shootWithComponentAction({ id, axis, direction });
+      }
     }, this.$config.shootThrottle);
   },
 

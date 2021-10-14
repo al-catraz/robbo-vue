@@ -1,11 +1,12 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
+import { random } from 'lodash';
 import eventBus from './utils/eventBus';
 import isCollisionDetected from './utils/collisionDetector';
 
 Vue.use(Vuex);
 
-export default function (/* todo remove config, storage */) {
+export default function () {
   return new Vuex.Store({
     state: {
       ammo: 0,
@@ -125,8 +126,11 @@ export default function (/* todo remove config, storage */) {
               state.map.splice(movingComponentIndex, 1);
 
               if (collidingComponentType.shootable) {
-                state.map.splice(collidingComponentIndex, 1);
-                // todo w jego miejsce wstawic animowana chmure
+                eventBus.$emit('play-sound', 'damage');
+                eventBus.$emit('replace-component', {
+                  id: collidingComponent.id,
+                  name: 'Fog',
+                });
               }
             }
           } else if (movingComponent.name === 'Shot') {
@@ -168,11 +172,10 @@ export default function (/* todo remove config, storage */) {
           return;
         }
 
-        const newMap = [...state.map];
-
-        newMap.push(map);
-
-        state.map = newMap;
+        state.map = [
+          map,
+          ...state.map,
+        ];
       },
 
       removeComponentMutation(state, id) {
@@ -191,8 +194,8 @@ export default function (/* todo remove config, storage */) {
         commit('ammoMutation', getters.ammoGetter + 9);
       },
 
-      addComponentAction({ getters, commit }, component) {
-        component.id = getters.mapGetter[getters.mapGetter.length - 1].id + 1;
+      addComponentAction({ commit }, component) {
+        component.id = random(1, 9999999999);
 
         commit('mapMutation', component);
       },
@@ -203,10 +206,6 @@ export default function (/* todo remove config, storage */) {
 
       addLifeAction({ getters, commit }) {
         commit('lifesMutation', getters.lifesGetter + 1);
-      },
-
-      addScrewAction({ getters, commit }) {
-        commit('screwsMutation', getters.screwsGetter + 1);
       },
 
       deleteAmmoAction({ getters, commit }) {
@@ -221,8 +220,22 @@ export default function (/* todo remove config, storage */) {
         commit('lifesMutation', getters.lifesGetter - 1);
       },
 
+      deleteScrewAction({ getters, commit }) {
+        commit('screwsMutation', getters.screwsGetter - 1);
+      },
+
       removeComponentAction({ commit }, id) {
         commit('removeComponentMutation', id);
+      },
+
+      replaceComponentAction({ getters, dispatch }, { id, name }) {
+        const {
+          x,
+          y,
+        } = getters.componentGetter(id);
+
+        dispatch('removeComponentAction', id);
+        dispatch('addComponentAction', { name, x, y });
       },
 
       setComponentPositionAction({ getters, commit }, { id, axis, direction }) {
@@ -252,13 +265,16 @@ export default function (/* todo remove config, storage */) {
       },
 
       setMapAction({ commit }, map) {
-        map.map((component, index) => {
-          component.id = index + 1;
+        const screws = map.filter((component) => component.name === 'Screw').length;
+
+        map.map((component) => {
+          component.id = random(1, 9999999999);
 
           return component;
         });
 
         commit('mapMutation', map);
+        commit('screwsMutation', screws);
       },
 
       shootWithComponentAction({ getters, dispatch }, { id, axis, direction }) {
@@ -286,7 +302,11 @@ export default function (/* todo remove config, storage */) {
           const shootedComponentType = getters.componentPropsGetter[shootedComponent.name];
 
           if (shootedComponentType.shootable) {
-            dispatch('removeComponentAction', shootedComponent.id);
+            eventBus.$emit('play-sound', 'damage');
+            eventBus.$emit('replace-component', {
+              id: shootedComponent.id,
+              name: 'Fog',
+            });
           }
         }
       },

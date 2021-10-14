@@ -1,11 +1,25 @@
 import { difference } from 'lodash';
 
 export default {
+  data() {
+    return {
+      shotComponents: [],
+    };
+  },
+
   watch: {
+    mapGetter(newMap, oldMap) {
+      const newShotComponents = newMap.filter((component) => component.name === 'Shot');
+      const oldShotComponents = oldMap.filter((component) => component.name === 'Shot');
+
+      if (newShotComponents.length !== oldShotComponents.length) {
+        this.shotComponents = newShotComponents;
+      }
+    },
+
     shotComponents(newShotComponents, oldShotComponents) {
       const shotComponent = difference(newShotComponents, oldShotComponents)[0];
-
-      let intervalHandler = null;
+      const intervalHandler = setInterval(animateShot.bind(this), this.$config.moveThrottle);
 
       function animateShot() {
         const isShotComponentExisting = this.componentGetter(shotComponent.id);
@@ -22,8 +36,6 @@ export default {
 
         clearInterval(intervalHandler);
       }
-
-      intervalHandler = setInterval(animateShot.bind(this), this.$config.moveThrottle);
     },
   },
 };

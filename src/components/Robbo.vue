@@ -1,6 +1,5 @@
 <template>
   <div
-    class="robbo"
     :class="[
       componentClass,
       skinClass,
@@ -18,7 +17,6 @@ export default {
 
   data() {
     return {
-      animationTime: 180,
       skinSide: 'down',
       skinStep: 1,
     };
@@ -42,7 +40,7 @@ export default {
 
       setTimeout(() => {
         this.skinStep = this.skinStep === 2 ? 1 : 2;
-      }, this.animationTime);
+      }, this.$config.robboAnimationTime);
 
       eventBus.$emit('play-sound', 'robbo');
     },
@@ -51,7 +49,7 @@ export default {
 
       setTimeout(() => {
         this.skinStep = this.skinStep === 2 ? 1 : 2;
-      }, this.animationTime);
+      }, this.$config.robboAnimationTime);
 
       eventBus.$emit('play-sound', 'robbo');
       eventBus.$emit('move-camera', this.skinSide);
@@ -68,7 +66,7 @@ export default {
 
       setTimeout(() => {
         this.skinStep = this.skinStep === 2 ? 1 : 2;
-      }, this.animationTime);
+      }, this.$config.robboAnimationTime);
     },
   },
 };
