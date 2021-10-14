@@ -19,9 +19,9 @@ export default {
 
     shotComponents(newShotComponents, oldShotComponents) {
       const shotComponent = difference(newShotComponents, oldShotComponents)[0];
-      const intervalHandler = setInterval(animateShot.bind(this), this.$config.moveThrottle);
+      const intervalHandler = setInterval(moveShot.bind(this), this.$config.moveThrottle);
 
-      function animateShot() {
+      function moveShot() {
         const isShotComponentExisting = this.componentGetter(shotComponent.id);
 
         if (isShotComponentExisting) {

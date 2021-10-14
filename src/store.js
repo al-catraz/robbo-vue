@@ -61,6 +61,12 @@ export default function () {
         };
       },
 
+      robboIdGetter: (state, getters) => {
+        const robboComponent = getters.mapGetter.find((component) => component.name === 'Robbo');
+
+        return robboComponent ? robboComponent.id : null;
+      },
+
       screwsGetter: (state) => state.screws,
     },
 
@@ -110,11 +116,16 @@ export default function () {
                 eventBus.$emit('play-sound', collidingComponentName);
                 eventBus.$emit('component-opened', collidingComponentName);
               } else if (collidingComponentType.movable) {
-                eventBus.$emit('move-component', {
-                  id: collidingComponent.id,
-                  axis,
-                  direction,
-                });
+                if (!(collidingComponentName === 'Capsule' && !state.screws)) {
+                  eventBus.$emit('move-component', {
+                    id: collidingComponent.id,
+                    axis,
+                    direction,
+                  });
+                } else {
+                  state.map.splice(movingComponentIndex, 1);
+                  eventBus.$emit('level-finished');
+                }
               }
 
               const robboCollisionAfterMoving = isCollisionDetected(state.map, id, nextPosition);

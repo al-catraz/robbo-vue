@@ -8,7 +8,6 @@ export default {
   data() {
     return {
       isShiftActive: false,
-      robboId: null,
     };
   },
 
@@ -16,15 +15,8 @@ export default {
     ...mapGetters([
       'componentPropsGetter',
       'nextPositionGetter',
+      'robboIdGetter',
     ]),
-  },
-
-  watch: {
-    mapGetter(newMap, oldMap) {
-      if (!oldMap.length) {
-        this.robboId = this.mapGetter.find((component) => component.name === 'Robbo').id;
-      }
-    },
   },
 
   created() {
@@ -33,7 +25,7 @@ export default {
 
     this.keyArrowDown = throttle(function () {
       const params = {
-        id: this.robboId,
+        id: this.robboIdGetter,
         axis: 'y',
         direction: 'positive',
       };
@@ -50,7 +42,7 @@ export default {
 
     this.keyArrowUp = throttle(function () {
       const params = {
-        id: this.robboId,
+        id: this.robboIdGetter,
         axis: 'y',
         direction: 'negative',
       };
@@ -67,7 +59,7 @@ export default {
 
     this.keyArrowLeft = throttle(function () {
       const params = {
-        id: this.robboId,
+        id: this.robboIdGetter,
         axis: 'x',
         direction: 'negative',
       };
@@ -84,7 +76,7 @@ export default {
 
     this.keyArrowRight = throttle(function () {
       const params = {
-        id: this.robboId,
+        id: this.robboIdGetter,
         axis: 'x',
         direction: 'positive',
       };

@@ -40,11 +40,11 @@ export default {
   },
 
   watch: {
-    x(newX) {
-      this.skinStep = newX % 2 === 0 ? 1 : 2;
+    x() {
+      this.skinStep = this.skinStep === 2 ? 1 : 2;
     },
-    y(newY) {
-      this.skinStep = newY % 2 === 0 ? 1 : 2;
+    y() {
+      this.skinStep = this.skinStep === 2 ? 1 : 2;
     },
   },
 };

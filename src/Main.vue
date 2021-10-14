@@ -47,15 +47,19 @@
 </template>
 
 <script>
-// dzialko
-// kapsuła
+// animacja wgrania mapy i urodzin robbo
+// dzwiek dzwoneczkow w kapsule
+// dzwiek wybuchu przy flashu
+// animacja zamkniecia levelu i wgranie kolejnego
+// uderzenie strzelu w cos co sie nie niszczy powoduje minimgle
+// dzialko strzelajace losowo
+// dzialko stale
+// rozne kierunki dzialka
 // teleportacja
 // niespodzianka
-// wybuch ze juz zebrano srubki i dzwiek
 // wybuch bomby i wybuchanie innych bomb dookola w lancuchu
 // po zniszczeniu robbo wylaczyc klawiature, przewinac obraz do gory az do odrodzenia
 // ------
-// animacja wgrania mapy i urodzin robbo
 // reset mapy esc
 // wykrycie inspectora i blokada
 import {
@@ -64,6 +68,7 @@ import {
 } from 'vuex';
 import Ammo from './components/Ammo.vue';
 import Bomb from './components/Bomb.vue';
+import Capsule from './components/Capsule.vue';
 import Crate from './components/Crate.vue';
 import Door from './components/Door.vue';
 import Fog from './components/Fog.vue';
@@ -82,6 +87,7 @@ export default {
   components: {
     Ammo,
     Bomb,
+    Capsule,
     Crate,
     Door,
     Fog,
@@ -99,6 +105,12 @@ export default {
     keyboard,
   ],
 
+  data() {
+    return {
+      isFlashActive: false,
+    };
+  },
+
   computed: {
     ...mapGetters([
       'ammoGetter',
@@ -111,7 +123,11 @@ export default {
     ]),
 
     viewportClass() {
-      return `viewport level-${this.levelGetter}`;
+      return [
+        'viewport',
+        `level-${this.levelGetter}`,
+        this.isFlashActive ? 'flash' : null,
+      ];
     },
   },
 
@@ -126,8 +142,10 @@ export default {
     this.setLifesAction(8);
     this.setLevelAction(1);
 
+    eventBus.$on('capsule-ready', this.capsuleReady);
     eventBus.$on('component-collected', this.componentCollected);
     eventBus.$on('component-opened', this.componentOpened);
+    eventBus.$on('level-finished', this.levelFinished);
     eventBus.$on('move-camera', this.moveCamera);
     eventBus.$on('move-component', this.moveComponent);
     eventBus.$on('play-sound', this.playSound);
@@ -150,6 +168,16 @@ export default {
       'setLifesAction',
       'setComponentPositionAction',
     ]),
+
+    capsuleReady() {
+      setTimeout(() => {
+        this.isFlashActive = true;
+
+        setTimeout(() => {
+          this.isFlashActive = false;
+        }, 100);
+      }, 200);
+    },
 
     componentCollected(name) {
       const componentCollectedAction = this[`${name === 'Screw' ? 'delete' : 'add'}${name}Action`];
@@ -185,6 +213,10 @@ export default {
       });
 
       return props;
+    },
+
+    levelFinished() {
+
     },
 
     async loadMap() {
@@ -271,6 +303,10 @@ export default {
       .component {
         background-image: url('assets/skins/1.png');
       }
+    }
+
+    &.flash {
+      background-color: #fff;
     }
   }
 

@@ -3,6 +3,7 @@ export default class Config {
 
   constructor() {
     this.config = {
+      capsuleAnimationTime: 500,
       fogAnimationTime: 100,
       isSoundEnabled: true,
       movableComponents: [
