@@ -42,24 +42,20 @@ export default {
   },
 
   watch: {
-    screwsGetter: {
-      immediate: true,
-      handler(screws) {
-        if (!screws && this.componentGetter(this.robboIdGetter)) {
-          eventBus.$emit('capsule-ready');
-
-          setInterval(() => {
-            this.skinStep = this.skinStep === 2 ? 1 : 2;
-          }, this.$config.capsuleAnimationTime);
-        }
-      },
-    },
     x() {
       eventBus.$emit('play-sound', 'move');
     },
     y() {
       eventBus.$emit('play-sound', 'move');
     },
+  },
+
+  created() {
+    if (this.capsuleReady) {
+      setInterval(() => {
+        this.skinStep = this.skinStep === 2 ? 1 : 2;
+      }, this.$config.capsuleAnimationTime);
+    }
   },
 };
 </script>

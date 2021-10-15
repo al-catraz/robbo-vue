@@ -5,6 +5,11 @@ export default {
       type: String,
     },
 
+    capsuleReady: {
+      default: false,
+      type: Boolean,
+    },
+
     collectable: {
       default: false,
       type: Boolean,

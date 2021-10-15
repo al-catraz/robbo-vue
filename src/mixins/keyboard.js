@@ -30,6 +30,10 @@ export default {
         direction: 'positive',
       };
 
+      if (!this.robboIdGetter) {
+        return;
+      }
+
       if (this.isShiftActive) {
         this.setComponentSideAction(params);
         this.shoot(params);
@@ -46,6 +50,10 @@ export default {
         axis: 'y',
         direction: 'negative',
       };
+
+      if (!this.robboIdGetter) {
+        return;
+      }
 
       if (this.isShiftActive) {
         this.setComponentSideAction(params);
@@ -64,6 +72,10 @@ export default {
         direction: 'negative',
       };
 
+      if (!this.robboIdGetter) {
+        return;
+      }
+
       if (this.isShiftActive) {
         this.setComponentSideAction(params);
         this.shoot(params);
@@ -80,6 +92,10 @@ export default {
         axis: 'x',
         direction: 'positive',
       };
+
+      if (!this.robboIdGetter) {
+        return;
+      }
 
       if (this.isShiftActive) {
         this.setComponentSideAction(params);

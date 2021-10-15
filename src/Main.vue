@@ -1,20 +1,28 @@
 <template>
   <div>
-    <div
-      ref="viewport"
-      :class="viewportClass"
-    >
-      <template v-for="(component, index) in mapGetter">
-        <component
-          :is="component.name"
-          :id="component.id"
-          :key="`${component.name}-${index}`"
-          :axis="component.axis"
-          :direction="component.direction"
-          :x="component.x"
-          :y="component.y"
-        />
-      </template>
+    <div class="scene">
+      <div
+        ref="viewport"
+        :class="viewportClass"
+      >
+        <template v-for="(component, index) in mapGetter">
+          <component
+            :is="component.name"
+            :id="component.id"
+            :key="`${component.name}-${index}`"
+            :axis="component.axis"
+            :capsule-ready="isCapsuleReady"
+            :direction="component.direction"
+            :x="component.x"
+            :y="component.y"
+          />
+        </template>
+      </div>
+
+      <div
+        class="curtain"
+        :class="{ opened: isCurtainOpened }"
+      />
     </div>
 
     <div class="stats">
@@ -47,20 +55,17 @@
 </template>
 
 <script>
-// animacja wgrania mapy i urodzin robbo
-// dzwiek dzwoneczkow w kapsule
-// dzwiek wybuchu przy flashu
-// animacja zamkniecia levelu i wgranie kolejnego
-// uderzenie strzelu w cos co sie nie niszczy powoduje minimgle
 // dzialko strzelajace losowo
-// dzialko stale
 // rozne kierunki dzialka
+// uderzenie strzelu w cos co sie nie niszczy powoduje minimgle
+// reset mapy esc
+// po zniszczeniu robbo przez dzialko reset levelu i resetCamera()
+// dzialko stale
 // teleportacja
 // niespodzianka
 // wybuch bomby i wybuchanie innych bomb dookola w lancuchu
-// po zniszczeniu robbo wylaczyc klawiature, przewinac obraz do gory az do odrodzenia
 // ------
-// reset mapy esc
+// wymusic klikniecie w Start zeby byl dziwek na poczatku
 // wykrycie inspectora i blokada
 import {
   mapGetters,
@@ -107,6 +112,8 @@ export default {
 
   data() {
     return {
+      isCapsuleReady: false,
+      isCurtainOpened: false,
       isFlashActive: false,
     };
   },
@@ -134,6 +141,14 @@ export default {
   watch: {
     levelGetter() {
       this.loadMap();
+    },
+
+    screwsGetter: {
+      handler(screws) {
+        if (!screws) {
+          eventBus.$emit('capsule-ready');
+        }
+      },
     },
   },
 
@@ -170,6 +185,10 @@ export default {
     ]),
 
     capsuleReady() {
+      this.isCapsuleReady = true;
+
+      eventBus.$emit('play-sound', 'flash');
+
       setTimeout(() => {
         this.isFlashActive = true;
 
@@ -216,7 +235,14 @@ export default {
     },
 
     levelFinished() {
+      this.isCapsuleReady = false;
+      this.isCurtainOpened = false;
 
+      eventBus.$emit('play-sound', 'finish');
+
+      setTimeout(() => {
+        this.setLevelAction(2);
+      }, this.$config.curtainAnimationTime + 200);
     },
 
     async loadMap() {
@@ -235,6 +261,14 @@ export default {
       });
 
       this.setMapAction(map);
+
+      this.$nextTick(() => {
+        this.$refs.viewport.scroll({ top: 31 * this.$config.unit });
+
+        this.resetCamera();
+
+        this.isCurtainOpened = true;
+      });
     },
 
     moveCamera(direction) {
@@ -243,9 +277,15 @@ export default {
       const currentOffset = ((currentRobboPosition * this.$config.unit) - currentScrollTop) / this.$config.unit;
 
       if (direction === 'down' && currentOffset === 8) {
-        this.$refs.viewport.scrollTop = (currentRobboPosition * this.$config.unit) - (5 * this.$config.unit);
+        this.$refs.viewport.scroll({
+          behavior: 'smooth',
+          top: (currentRobboPosition * this.$config.unit) - (5 * this.$config.unit),
+        });
       } else if (direction === 'up' && currentOffset === 1) {
-        this.$refs.viewport.scrollTop = (currentRobboPosition * this.$config.unit) - (4 * this.$config.unit);
+        this.$refs.viewport.scroll({
+          behavior: 'smooth',
+          top: (currentRobboPosition * this.$config.unit) - (4 * this.$config.unit),
+        });
       }
     },
 
@@ -265,8 +305,47 @@ export default {
       }
     },
 
-    replaceComponent({ id, name }) {
-      this.replaceComponentAction({ id, name });
+    async replaceComponent({ id, name }) {
+      const component = await this.replaceComponentAction({ id, name });
+
+      return component;
+    },
+
+    async resetCamera() {
+      const currentScrollTop = this.$refs.viewport ? this.$refs.viewport.scrollTop : 0;
+      const yComponentsCount = currentScrollTop / this.$config.unit;
+      const robboComponent = this.componentGetter(this.robboIdGetter);
+      const capsuleComponent = await this.replaceComponent({
+        id: robboComponent.id,
+        name: 'Capsule',
+      });
+
+      for (let i = 0; i <= yComponentsCount; i++) {
+        setTimeout(() => {
+          this.$refs.viewport.scroll({
+            behavior: 'smooth',
+            top: currentScrollTop - (this.$config.unit * i),
+          });
+
+          if (i === yComponentsCount) {
+            setTimeout(async () => {
+              eventBus.$emit('play-sound', 'birth');
+
+              const fogComponent = await this.replaceComponent({
+                id: capsuleComponent.id,
+                name: 'Fog',
+              });
+
+              setTimeout(() => {
+                this.replaceComponent({
+                  id: fogComponent.id,
+                  name: 'Robbo',
+                });
+              }, this.$config.fogAnimationTime * 3);
+            }, this.$config.robboAnimationTime);
+          }
+        }, this.$config.moveThrottle * i);
+      }
     },
   },
 };
@@ -290,30 +369,56 @@ export default {
     justify-content: center;
   }
 
-  .viewport {
-    height: $unit * 10;
-    overflow: hidden;
-    position: relative;
-    scroll-behavior: smooth;
-    width: $unit * 16;
-
-    &.level-1 {
-      background-color: #145807;
-
-      .component {
-        background-image: url('assets/skins/1.png');
-      }
-    }
-
-    &.flash {
-      background-color: #fff;
-    }
-  }
-
   .component {
     height: $unit;
     position: absolute;
     width: $unit;
+  }
+
+  .scene {
+    position: relative;
+
+    .viewport {
+      height: $unit * 10;
+      overflow: hidden;
+      position: relative;
+      width: $unit * 16;
+
+      &.level-1 {
+        background-color: #145807;
+
+        .component {
+          background-image: url('assets/skins/1.png');
+        }
+      }
+
+      &.level-2 {
+        background-color: powderblue;
+
+        .component {
+          background-image: url('assets/skins/1.png');
+        }
+      }
+
+      &.flash {
+        background-color: #fff;
+      }
+    }
+
+    .curtain {
+      background: #000;
+      height: 100%;
+      left: 0;
+      position: absolute;
+      top: 0;
+      transition: width 1s linear;
+      width: 100%;
+      z-index: 1;
+
+      &.opened {
+        width: 0;
+      }
+    }
   }
 
   .stats {

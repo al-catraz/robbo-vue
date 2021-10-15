@@ -209,6 +209,8 @@ export default function () {
         component.id = random(1, 9999999999);
 
         commit('mapMutation', component);
+
+        return component;
       },
 
       addKeyAction({ getters, commit }) {
@@ -239,14 +241,21 @@ export default function () {
         commit('removeComponentMutation', id);
       },
 
-      replaceComponentAction({ getters, dispatch }, { id, name }) {
+      async replaceComponentAction({ getters, dispatch }, { id, name }) {
+        if (!id) {
+          return;
+        }
+
         const {
           x,
           y,
         } = getters.componentGetter(id);
 
         dispatch('removeComponentAction', id);
-        dispatch('addComponentAction', { name, x, y });
+
+        const component = await dispatch('addComponentAction', { name, x, y });
+
+        return component;
       },
 
       setComponentPositionAction({ getters, commit }, { id, axis, direction }) {
