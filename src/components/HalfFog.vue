@@ -12,29 +12,28 @@
 import { mapActions } from 'vuex';
 import component from '../mixins/component';
 
-const skinSteps = [1, 2, 3, 4, 3, 2, 1];
-
 export default {
   mixins: [component],
 
   data() {
     return {
-      skinStep: 1,
+      skinStep: this.direction === 'positive' ? 1 : 4,
+      skinSteps: this.direction === 'positive' ? [1, 2, 3, 4] : [4, 3, 2, 1],
     };
   },
 
   computed: {
     skinClass() {
-      return `fog-${this.skinStep}`;
+      return `half-fog-${this.skinStep}`;
     },
   },
 
   created() {
-    skinSteps.forEach((skinStep, index) => {
+    this.skinSteps.forEach((skinStep, index) => {
       setTimeout(() => {
         this.skinStep = skinStep;
 
-        if (index === skinSteps.length - 1) {
+        if (index === this.skinSteps.length - 1) {
           this.removeComponentAction(this.id);
         }
       }, (index + 1) * this.$config.fogAnimationTime);
@@ -50,7 +49,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-  .fog {
+  .half-fog {
     &-1 {
       background-position: 0 -64px;
     }

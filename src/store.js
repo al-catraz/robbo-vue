@@ -134,18 +134,30 @@ export default function () {
                 eventBus.$emit('move-component', { id, axis, direction });
               }
             } else if (movingComponent.name === 'Shot') {
-              state.map.splice(movingComponentIndex, 1);
-
               if (collidingComponentType.shootable) {
                 eventBus.$emit('play-sound', 'damage');
                 eventBus.$emit('replace-component', {
                   id: collidingComponent.id,
                   name: 'Fog',
                 });
+              } else if (!['Fog', 'HalfFog'].includes(collidingComponentName)) {
+                eventBus.$emit('play-sound', 'Fog');
+                eventBus.$emit('replace-component', {
+                  id: movingComponent.id,
+                  name: 'HalfFog',
+                  direction: 'negative',
+                });
+              } else {
+                state.map.splice(movingComponentIndex, 1);
               }
             }
           } else if (movingComponent.name === 'Shot') {
-            state.map.splice(movingComponentIndex, 1);
+            eventBus.$emit('play-sound', 'Fog');
+            eventBus.$emit('replace-component', {
+              id: movingComponent.id,
+              name: 'HalfFog',
+              direction: 'negative',
+            });
           }
         } else {
           movingComponent.x = x;
@@ -241,7 +253,7 @@ export default function () {
         commit('removeComponentMutation', id);
       },
 
-      async replaceComponentAction({ getters, dispatch }, { id, name }) {
+      async replaceComponentAction({ getters, dispatch }, { id, name, direction }) {
         if (!id) {
           return;
         }
@@ -253,7 +265,7 @@ export default function () {
 
         dispatch('removeComponentAction', id);
 
-        const component = await dispatch('addComponentAction', { name, x, y });
+        const component = await dispatch('addComponentAction', { name, x, y, direction });
 
         return component;
       },
@@ -319,9 +331,9 @@ export default function () {
           dispatch('addComponentAction', shotComponent);
         } else {
           const shootedComponent = getters.mapGetter.find((component) => component.x === shotComponent.x && component.y === shotComponent.y);
-          const shootedComponentType = getters.componentPropsGetter[shootedComponent.name];
+          const shootedComponentType = shootedComponent ? getters.componentPropsGetter[shootedComponent.name] : null;
 
-          if (shootedComponentType.shootable) {
+          if (shootedComponentType && shootedComponentType.shootable) {
             eventBus.$emit('play-sound', 'damage');
             eventBus.$emit('replace-component', {
               id: shootedComponent.id,

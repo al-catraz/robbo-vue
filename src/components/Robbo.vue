@@ -15,6 +15,13 @@ import eventBus from '../utils/eventBus';
 export default {
   mixins: [component],
 
+  props: {
+    shootable: {
+      type: Boolean,
+      default: true,
+    },
+  },
+
   data() {
     return {
       skinSide: 'down',

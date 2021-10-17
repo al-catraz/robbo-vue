@@ -55,13 +55,12 @@
 </template>
 
 <script>
-// dzialko strzelajace losowo
+// dzialko strzelajace losowo + dzwiek
 // rozne kierunki dzialka
-// uderzenie strzelu w cos co sie nie niszczy powoduje minimgle
 // reset mapy esc
 // po zniszczeniu robbo przez dzialko reset levelu i resetCamera()
-// dzialko stale
 // teleportacja
+// laser
 // niespodzianka
 // wybuch bomby i wybuchanie innych bomb dookola w lancuchu
 // ------
@@ -77,6 +76,7 @@ import Capsule from './components/Capsule.vue';
 import Crate from './components/Crate.vue';
 import Door from './components/Door.vue';
 import Fog from './components/Fog.vue';
+import HalfFog from './components/HalfFog.vue';
 import Key from './components/Key.vue';
 import Life from './components/Life.vue';
 import Robbo from './components/Robbo.vue';
@@ -96,6 +96,7 @@ export default {
     Crate,
     Door,
     Fog,
+    HalfFog,
     Key,
     Life,
     Robbo,
@@ -194,8 +195,8 @@ export default {
 
         setTimeout(() => {
           this.isFlashActive = false;
-        }, 100);
-      }, 200);
+        }, this.$config.flashAnimationTime);
+      }, this.$config.flashAnimationTime * 2);
     },
 
     componentCollected(name) {
@@ -242,14 +243,14 @@ export default {
 
       setTimeout(() => {
         this.setLevelAction(2);
-      }, this.$config.curtainAnimationTime + 200);
+      }, this.$config.curtainAnimationTime);
     },
 
     async loadMap() {
       let map = await (await fetch(`maps/${this.levelGetter}.json`)).json();
 
       map = map.map((component) => {
-        if (this.$config.movableComponents.includes(component.name)) {
+        if (this.$config.componentsWithDirection.includes(component.name)) {
           return {
             ...component,
             axis: 'x',
@@ -305,8 +306,8 @@ export default {
       }
     },
 
-    async replaceComponent({ id, name }) {
-      const component = await this.replaceComponentAction({ id, name });
+    async replaceComponent({ id, name, direction }) {
+      const component = await this.replaceComponentAction({ id, name, direction });
 
       return component;
     },
@@ -331,17 +332,18 @@ export default {
             setTimeout(async () => {
               eventBus.$emit('play-sound', 'birth');
 
-              const fogComponent = await this.replaceComponent({
+              const halfFogComponent = await this.replaceComponent({
                 id: capsuleComponent.id,
-                name: 'Fog',
+                name: 'HalfFog',
+                direction: 'positive',
               });
 
               setTimeout(() => {
                 this.replaceComponent({
-                  id: fogComponent.id,
+                  id: halfFogComponent.id,
                   name: 'Robbo',
                 });
-              }, this.$config.fogAnimationTime * 3);
+              }, this.$config.halfFogTime);
             }, this.$config.robboAnimationTime);
           }
         }, this.$config.moveThrottle * i);

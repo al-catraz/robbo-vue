@@ -63,11 +63,11 @@ export default {
 <style lang="scss" scoped>
   .capsule {
      &-1 {
-      background-position: 0 -96px;
+      background-position: 0 -128px;
     }
 
     &-2 {
-      background-position: -32px -96px;
+      background-position: -32px -128px;
     }
   }
 </style>
