@@ -135,16 +135,25 @@ export default function () {
               }
             } else if (movingComponent.name === 'Shot') {
               if (collidingComponentType.shootable) {
-                eventBus.$emit('play-sound', 'damage');
+                if (collidingComponentType.explodable) {
+                  eventBus.$emit('play-sound', 'explosion');
+                } else {
+                  eventBus.$emit('play-sound', 'damage');
+                }
+
                 eventBus.$emit('replace-component', {
                   id: collidingComponent.id,
                   name: 'Fog',
                 });
-              } else if (!['Fog', 'HalfFog'].includes(collidingComponentName)) {
+
+                if (collidingComponentName === 'Robbo') {
+                  eventBus.$emit('reset-level');
+                }
+              } else if (!['Fog', 'HalfFog', 'QuarterFog'].includes(collidingComponentName)) {
                 eventBus.$emit('play-sound', 'Fog');
                 eventBus.$emit('replace-component', {
                   id: movingComponent.id,
-                  name: 'HalfFog',
+                  name: 'QuarterFog',
                   direction: 'negative',
                 });
               } else {
@@ -155,7 +164,7 @@ export default function () {
             eventBus.$emit('play-sound', 'Fog');
             eventBus.$emit('replace-component', {
               id: movingComponent.id,
-              name: 'HalfFog',
+              name: 'QuarterFog',
               direction: 'negative',
             });
           }
@@ -218,7 +227,7 @@ export default function () {
       },
 
       addComponentAction({ commit }, component) {
-        component.id = random(1, 9999999999);
+        component.id = random(1, 9999999999999999999);
 
         commit('mapMutation', component);
 
@@ -300,7 +309,7 @@ export default function () {
         const screws = map.filter((component) => component.name === 'Screw').length;
 
         map.map((component) => {
-          component.id = random(1, 9999999999);
+          component.id = random(1, 9999999999999999999);
 
           return component;
         });

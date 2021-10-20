@@ -55,16 +55,13 @@
 </template>
 
 <script>
-// dzialko strzelajace losowo + dzwiek
-// rozne kierunki dzialka
-// reset mapy esc
-// po zniszczeniu robbo przez dzialko reset levelu i resetCamera()
+// strzaly chyba nadpisuja skinstep
+// ekran poczatkowy z przyciskiem Start zeby wymusic dzwiek
 // teleportacja
 // laser
 // niespodzianka
 // wybuch bomby i wybuchanie innych bomb dookola w lancuchu
 // ------
-// wymusic klikniecie w Start zeby byl dziwek na poczatku
 // wykrycie inspectora i blokada
 import {
   mapGetters,
@@ -72,6 +69,7 @@ import {
 } from 'vuex';
 import Ammo from './components/Ammo.vue';
 import Bomb from './components/Bomb.vue';
+import Cannon from './components/Cannon.vue';
 import Capsule from './components/Capsule.vue';
 import Crate from './components/Crate.vue';
 import Door from './components/Door.vue';
@@ -79,6 +77,7 @@ import Fog from './components/Fog.vue';
 import HalfFog from './components/HalfFog.vue';
 import Key from './components/Key.vue';
 import Life from './components/Life.vue';
+import QuarterFog from './components/QuarterFog.vue';
 import Robbo from './components/Robbo.vue';
 import Rubble from './components/Rubble.vue';
 import Screw from './components/Screw.vue';
@@ -92,6 +91,7 @@ export default {
   components: {
     Ammo,
     Bomb,
+    Cannon,
     Capsule,
     Crate,
     Door,
@@ -99,6 +99,7 @@ export default {
     HalfFog,
     Key,
     Life,
+    QuarterFog,
     Robbo,
     Rubble,
     Screw,
@@ -114,8 +115,9 @@ export default {
   data() {
     return {
       isCapsuleReady: false,
-      isCurtainOpened: false,
+      isCurtainOpened: true,
       isFlashActive: false,
+      isFocused: true,
     };
   },
 
@@ -166,6 +168,13 @@ export default {
     eventBus.$on('move-component', this.moveComponent);
     eventBus.$on('play-sound', this.playSound);
     eventBus.$on('replace-component', this.replaceComponent);
+    eventBus.$on('reset-level', this.resetLevel);
+    window.addEventListener('focus', () => {
+      this.isFocused = true;
+    });
+    window.addEventListener('blur', () => {
+      this.isFocused = false;
+    });
   },
 
   methods: {
@@ -246,7 +255,7 @@ export default {
       }, this.$config.curtainAnimationTime);
     },
 
-    async loadMap() {
+    async loadMap(reload = false) {
       let map = await (await fetch(`maps/${this.levelGetter}.json`)).json();
 
       map = map.map((component) => {
@@ -263,10 +272,35 @@ export default {
 
       this.setMapAction(map);
 
-      this.$nextTick(() => {
-        this.$refs.viewport.scroll({ top: 31 * this.$config.unit });
+      this.$nextTick(async () => {
+        if (!reload) {
+          this.$refs.viewport.scroll({ top: 31 * this.$config.unit });
+        }
 
-        this.resetCamera();
+        const robboComponent = this.componentGetter(this.robboIdGetter);
+        const capsuleComponent = await this.replaceComponent({
+          id: robboComponent.id,
+          name: 'Capsule',
+        });
+
+        await this.resetCamera();
+
+        setTimeout(async () => {
+          eventBus.$emit('play-sound', 'birth');
+
+          const halfFogComponent = await this.replaceComponent({
+            id: capsuleComponent.id,
+            name: 'HalfFog',
+            direction: 'positive',
+          });
+
+          setTimeout(() => {
+            this.replaceComponent({
+              id: halfFogComponent.id,
+              name: 'Robbo',
+            });
+          }, (this.$config.fogAnimationTime * 4) - 20);
+        }, 500);
 
         this.isCurtainOpened = true;
       });
@@ -301,7 +335,7 @@ export default {
     playSound(name) {
       const sound = new Audio(`./audio/${name}.mp3`);
 
-      if (this.$config.isSoundEnabled) {
+      if (this.$config.isSoundEnabled && this.isFocused) {
         sound.play();
       }
     },
@@ -313,41 +347,42 @@ export default {
     },
 
     async resetCamera() {
-      const currentScrollTop = this.$refs.viewport ? this.$refs.viewport.scrollTop : 0;
-      const yComponentsCount = currentScrollTop / this.$config.unit;
-      const robboComponent = this.componentGetter(this.robboIdGetter);
-      const capsuleComponent = await this.replaceComponent({
-        id: robboComponent.id,
-        name: 'Capsule',
+      return new Promise((resolve) => {
+        const currentScrollTop = this.$refs.viewport ? this.$refs.viewport.scrollTop : 0;
+        const yComponentsCount = currentScrollTop / this.$config.unit;
+
+        for (let i = 0; i <= yComponentsCount; i++) {
+          setTimeout(() => {
+            this.$refs.viewport.scroll({
+              behavior: 'smooth',
+              top: currentScrollTop - (this.$config.unit * i),
+            });
+
+            if (i === yComponentsCount) {
+              return resolve();
+            }
+          }, this.$config.moveThrottle * i);
+        }
+      });
+    },
+
+    resetLevel() {
+      eventBus.$emit('play-sound', 'explosion');
+
+      this.mapGetter.forEach((component) => {
+        this.replaceComponent({
+          id: component.id,
+          name: 'Fog',
+        });
       });
 
-      for (let i = 0; i <= yComponentsCount; i++) {
+      setTimeout(() => {
+        this.loadMap(true);
+
         setTimeout(() => {
-          this.$refs.viewport.scroll({
-            behavior: 'smooth',
-            top: currentScrollTop - (this.$config.unit * i),
-          });
-
-          if (i === yComponentsCount) {
-            setTimeout(async () => {
-              eventBus.$emit('play-sound', 'birth');
-
-              const halfFogComponent = await this.replaceComponent({
-                id: capsuleComponent.id,
-                name: 'HalfFog',
-                direction: 'positive',
-              });
-
-              setTimeout(() => {
-                this.replaceComponent({
-                  id: halfFogComponent.id,
-                  name: 'Robbo',
-                });
-              }, this.$config.halfFogTime);
-            }, this.$config.robboAnimationTime);
-          }
-        }, this.$config.moveThrottle * i);
-      }
+          this.resetCamera();
+        }, this.$config.fogAnimationTime * 6);
+      }, this.$config.mapLoadTime + (this.$config.fogAnimationTime * 4));
     },
   },
 };

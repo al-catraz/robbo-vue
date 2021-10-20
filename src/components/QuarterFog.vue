@@ -1,0 +1,69 @@
+<template>
+  <div
+    :class="[
+      componentClass,
+      skinClass,
+    ]"
+    :style="componentPosition"
+  />
+</template>
+
+<script>
+import { mapActions } from 'vuex';
+import component from '../mixins/component';
+
+export default {
+  mixins: [component],
+
+  data() {
+    return {
+      skinStep: this.direction === 'positive' ? 0 : 2,
+      skinSteps: this.direction === 'positive' ? [0, 1, 2] : [2, 1, 0],
+    };
+  },
+
+  computed: {
+    skinClass() {
+      return `quarter-fog-${this.skinStep}`;
+    },
+  },
+
+  created() {
+    this.skinSteps.forEach((skinStep, index) => {
+      setTimeout(() => {
+        this.skinStep = skinStep;
+
+        if (index === this.skinSteps.length - 1) {
+          this.removeComponentAction(this.id);
+        }
+      }, (index + 1) * this.$config.fogAnimationTime);
+    });
+  },
+
+  methods: {
+    ...mapActions([
+      'removeComponentAction',
+    ]),
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+  .quarter-fog {
+    &-1 {
+      background-position: 0 -64px;
+    }
+
+    &-2 {
+      background-position: -32px -64px;
+    }
+
+    &-3 {
+      background-position: -64px -64px;
+    }
+
+    &-4 {
+      background-position: -96px -64px;
+    }
+  }
+</style>

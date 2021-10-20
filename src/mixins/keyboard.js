@@ -107,6 +107,10 @@ export default {
       this.moveComponent(params);
     }, this.$config.moveThrottle);
 
+    this.keyEscape = throttle(() => {
+      this.resetLevel();
+    }, this.$config.shootThrottle);
+
     this.shoot = throttle(function ({ id, axis, direction }) {
       if (this.isShiftActive) {
         this.shootWithComponentAction({ id, axis, direction });
@@ -116,7 +120,6 @@ export default {
 
   methods: {
     ...mapActions([
-      'addComponentAction',
       'removeComponentAction',
       'setComponentSideAction',
       'shootWithComponentAction',
