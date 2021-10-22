@@ -6,7 +6,7 @@ import isCollisionDetected from './utils/collisionDetector';
 
 Vue.use(Vuex);
 
-export default function () {
+export default function (config) {
   return new Vuex.Store({
     state: {
       ammo: 0,
@@ -228,6 +228,11 @@ export default function () {
 
       addComponentAction({ commit }, component) {
         component.id = random(1, 9999999999999999999);
+
+        if (config.componentsWithDirection.includes(component.name)) {
+          component.axis = 'x';
+          component.direction = 'positive';
+        }
 
         commit('mapMutation', component);
 

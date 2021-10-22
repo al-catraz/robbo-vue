@@ -5,8 +5,6 @@ export default class Config {
     this.config = {
       capsuleAnimationTime: 500,
       componentsWithDirection: [
-        'HalfFog',
-        'QuarterFog',
         'Robbo',
         'Roller',
       ],

@@ -1,4 +1,3 @@
-// @flow
 export default function (map, id, nextPosition) {
   let collision = false;
 

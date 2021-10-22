@@ -7,7 +7,7 @@ import Store from './store';
 const config = new Config();
 const storage = new Storage(config);
 const session = new Storage(config, 'sessionStorage');
-const store = new Store(config, storage);
+const store = new Store(config);
 
 Vue.config.productionTip = !config.isProduction;
 Vue.prototype.$config = config;

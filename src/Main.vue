@@ -58,9 +58,9 @@
 // strzaly chyba nadpisuja skinstep
 // ekran poczatkowy z przyciskiem Start zeby wymusic dzwiek
 // teleportacja
-// laser
 // niespodzianka
 // wybuch bomby i wybuchanie innych bomb dookola w lancuchu
+// laser
 // ------
 // wykrycie inspectora i blokada
 import {
